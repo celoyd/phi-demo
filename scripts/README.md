@@ -1,6 +1,6 @@
 # Golden ratio sampling scripts
 
-These are some utility scripts to support learning about spatial sampling with the golden ratio. As the main README explains, the intent is to provide useful snippets, not a standalone library. The rest of this README walks through one (rather idiosyncratic) way of generating viewsheds of the Wonderland trail.
+These are scripts to support learning about spatial sampling with the golden ratio, particularly sampling along paths. As the main README explains, the intent is to provide useful snippets, not a standalone library. The rest of this README walks through one (rather idiosyncratic) way of generating viewsheds of the Wonderland Trail.
 
 ## A viewshed demo
 
@@ -16,7 +16,7 @@ To follow the exact steps listed here, you will need a Unix-like system (Linux, 
 - A good amount of processing power to work with large files reasonably quickly
 - The [GDAL](https://gdal.org/) command-line tools, for various geospatial operations
 - [GNU parallel](https://www.gnu.org/software/parallel/), for templating complex iteration in the shell (basically letting you construct loops that you would otherwise want to drive with python-or-whatever)
-- A modern python installation with libraries including `gpxpy`, `pyproj`, `click`, 
+- A modern python installation with libraries including `gpxpy`, `pyproj`, and `click`
 
 ### Getting the data
 
@@ -71,9 +71,9 @@ That is, sample:
 
 - `-c` with a counter number in the output (so we can number our viewshed frames)
 - `-s ","` with the separator `,`
-- `wonderland.gpx` from that file
+- `wonderland.gpx` reading out of that file
 - `phi` in steps of the golden ratio
-- `..249` sampling the first 250 points
+- `..249` sample points 0 through 249
 - `32610` in EPSG:32610, which also means the output units are meters
 
 The output should end:
@@ -96,16 +96,16 @@ So we have a CSV of sample number, x coordinate, y coordinate. We could save thi
 
 ## Generating images
 
-First let’s make somewhere for our individual viewsheds to go:
+First let’s make somewhere for our individual viewshed images to go:
 
 ```
 mkdir wonderland-phi-points
 ```
 
-Now we’re going to run the `gpx_sampler.py` query again, but this time using it as input for a `parallel` template for `gdal_viewshed`. This is going to look scary at first but notice, for a start, that everything after `:::` is what we already saw, and could in principle be replaced by saving points to a file. You can run with with the `--dry-run` flag to `parallel` to see it templated out without running it. But here’s the core of this whole process:
+Now we’re going to run the `gpx_sampler.py` query again, but this time using it as input for a `parallel` template for `gdal_viewshed`. This is going to look scary at first but notice, for a start, that everything after `:::` is what we already saw, and could be replaced by reading points saved to a file. You can run all this with the `--dry-run` flag to `parallel` to see it templated out without running it. So here’s the core of this whole process:
 
 ```sh
-parallel -j3 --colsep "," gdal_viewshed -co compress=lzw -cc 0.85714 -oz 2 -ox {2} -oy {3} /mnt/seastar/viewsheds/rainier2007/all_m.tif /{1}.tif ::: $(python gpx_sampler.py -c -s "," wonderland.gpx phi ..249 32610)
+parallel -j3 --colsep "," gdal_viewshed -co compress=lzw -cc 0.85714 -oz 2 -ox {2} -oy {3} all_m.tif /{1}.tif ::: $(python gpx_sampler.py -c -s "," wonderland.gpx phi ..249 32610)
 ```
 
 Okay, first the `parallel` flags:
@@ -113,7 +113,7 @@ Okay, first the `parallel` flags:
 - `-j3` use 3 workers – adjust this heuristically
 - `--colsep ","` parse input as CSV
 - `:::` everything after this is the template input
-- `{2}` everything in curly braces is template variables, named for their column in the CSV
+- `{2}` everything in curly braces is template variables, named for their 1-based column in the CSV
 
 And `gdal_viewshed`’s:
 
@@ -126,5 +126,5 @@ After you run this, you should have 250 viewshed images, each sampled another φ
 
 ## Ways forward
 
-Since phi sampling is deterministic, you can regenerate those points to, for example, draw a marker on each frame. You can collect the images into a cumulative average. You can just average them together and get a kind of multi-angle hillshade. You can re-run `gpx_sampler.py` with a fractional step (say, 1/250) and compare. Et cetera. Have fun!
+Since phi sampling is deterministic, you can regenerate those points to, for example, draw a marker on each frame. You can collect the images into a cumulative average. You can just average them together and get a kind of multi-angle hillshade, amounting to a visibility index w/r/t the Wonderland Trail. You can re-run `gpx_sampler.py` with a non-phi fractional step (say, 1/250 if you’re sampling 250 points) and compare. Et cetera. Have fun!
 
