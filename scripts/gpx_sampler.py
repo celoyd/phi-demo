@@ -1,18 +1,5 @@
-# gpx_sampler.py wonderland_trail.gpx phi 0..10 32610
-# Get 10 coordinates from the Wonderland Trail in EPSG:32610, spaced by phi
-
-# How would you get something like wonderland_trail.gpx?
-# You’d go to http://overpass-turbo.eu/ and enter this query:
-#
-# [out:json][timeout:25];
-# (
-#  relation(4111743);
-# );
-# out body;
-# >;
-# out skel qt;
-#
-# run that, and export it as a gpx.
+# gpx_sampler.py wonderland_trail.gpx phi ..10 32610
+# Get 9 coordinates from the Wonderland Trail in EPSG:32610, spaced by phi
 
 # Todo: sort out click commands v. arguments
 
